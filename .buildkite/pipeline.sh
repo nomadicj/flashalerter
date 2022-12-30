@@ -80,4 +80,4 @@ function generate_pipeline() {
 }
 
 # upload dynamically generated pipeline to buildkite
-generate_pipeline #| buildkite-agent pipeline upload
+generate_pipeline | buildkite-agent pipeline upload
