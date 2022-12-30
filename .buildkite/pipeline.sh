@@ -23,7 +23,7 @@ function generate_build() {
   cat <<STEP
 
   - label: ":building_construction: Build"
-    command: make deploy
+    command: make build
 
 STEP
 }
