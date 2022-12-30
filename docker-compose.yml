@@ -2,9 +2,7 @@ version: '3.2'
 
 services:
   flashalerter:
-    build:
-      context: ./
-      dockerfile: Dockerfile
+    image: nomadicj/flashalerter:beta
     env_file: .env
     volumes:
       - type: bind

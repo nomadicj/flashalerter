@@ -6,9 +6,30 @@ $(VERBOSE).SILENT:
 init:
 	pip install -r requirements.txt
 
+.PHONY: lint
+lint:
+	pylint src/
+
 .PHONY: test
 test:
 	py.test tests
+
+.PHONY: build
+build:
+	docker build -t flashalerter:latest .
+
+.PHONY: scan
+scan:
+	docker scan flashalerter:latest
+
+.PHONY: push
+push:
+	docker tag flashalerter:latest nomadicj/flashalerter:beta
+	docker push nomadicj/flashalerter:beta
+
+.PHONY: deploy
+deploy:
+	docker-compose up --force-recreate
 
 .PHONY: local
 local:

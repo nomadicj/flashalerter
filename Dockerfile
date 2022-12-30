@@ -1,9 +1,9 @@
 FROM python:alpine
 
-COPY requirements.txt .
+ADD ./requirements.txt .
 
 RUN pip install -r requirements.txt
 
-ADD src/ .
+ADD ./src/ .
 
 CMD ["python3", "main.py"] 
