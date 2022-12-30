@@ -64,10 +64,10 @@ STEP
 
 function generate_pipeline() {
   # create header of pipeline
-  cat << EOF
-env:
-  
-EOF
+#  cat << EOF
+#env:
+#  
+#EOF
   echo "steps:"
 
   # Lint the root of the repo
