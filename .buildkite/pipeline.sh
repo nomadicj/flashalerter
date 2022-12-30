@@ -71,8 +71,8 @@ function generate_pipeline() {
   echo "steps:"
 
   # Lint the root of the repo
-  generate_lint
-  generate_test
+  # generate_lint
+  # generate_test
   generate_build
   generate_wait
   generate_push
@@ -80,4 +80,4 @@ function generate_pipeline() {
 }
 
 # upload dynamically generated pipeline to buildkite
-generate_pipeline | buildkite-agent pipeline upload
+generate_pipeline #| buildkite-agent pipeline upload
