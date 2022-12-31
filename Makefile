@@ -4,6 +4,7 @@ $(VERBOSE).SILENT:
 
 # DOCKER_LOGIN := docker login -u $DOCKER_USER -p $DOCKER_PASS
 DOCKER_LOGIN := cat /etc/buildkite/docker-config.txt | docker login --username nomadicj --password-stdin
+DOCKER_PUSH := docker push nomadicj/flashalerter:beta
 
 .PHONY: init
 init:
@@ -28,8 +29,7 @@ scan:
 .PHONY: push
 push:
 	docker tag flashalerter:latest nomadicj/flashalerter:beta
-	$(DOCKER_LOGIN)
-	docker push nomadicj/flashalerter:beta
+	$(DOCKER_PUSH) || ($(DOCKER_LOGIN) && $(DOCKER_PUSH))
 
 .PHONY: deploy
 deploy:

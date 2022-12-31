@@ -36,6 +36,7 @@ def push_notifications(
             data={
                 "token": pushover_apikey,
                 "user": pushover_userkey,
+                "title": 'FlashFood v0.1',
                 "message": message
             },
             files={

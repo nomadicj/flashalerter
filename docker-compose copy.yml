@@ -1,0 +1,18 @@
+version: '3.2'
+
+services:
+  flashalerter:
+    build:
+      context: ./
+      dockerfile: Dockerfile
+    env_file: .env
+    volumes:
+      - type: bind
+        source: ./log
+        target: /log
+      - type: bind
+        source: ./db
+        target: /db
+volumes:
+  logs:
+    driver: local

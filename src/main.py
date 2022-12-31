@@ -2,7 +2,7 @@ import os
 import logging
 import json
 from datetime import datetime
-import flashFood
+import flash_food
 import pushover
 import db
 
@@ -58,7 +58,7 @@ def init_db():
 def init_flashfood_api(flashfood_user, flashfood_pass):
     ''' initialise flashfood api token '''
     logging.info('Initialising FlashFood api')
-    access_token = flashFood.get_flash_auth_token(flashfood_user, flashfood_pass)
+    access_token = flash_food.get_flash_auth_token(flashfood_user, flashfood_pass)
 
     return access_token
 
@@ -69,19 +69,28 @@ def main():
 
     if access_token is False:
         logging.critical('No access token returned. Exiting.')
-        exit()
+        print('Critical error getting access token. Exiting.')
+        exit(-1)
+
+    lat: float = 49.2568
+    long: float = -122.8255
+    distance: int = 5
+
+    nearest_stores = flash_food.get_nearest_stores(lat, long, distance, access_token)
+
+    logging.debug(f'Nearest stores: {nearest_stores}')
 
     items = []
 
-    for flashfood_store_id in flashfood_store_ids:
-        store_items = flashFood.get_items(flashfood_store_id, access_token)
+    for store in nearest_stores:
+        store_items = flash_food.get_items(store['id'], access_token)
         if 'success' in store_items:
-            logging.debug(f'get_items for [{flashfood_store_id}] returned successfully')
+            logging.debug(f"get_items for [{store['name']}] returned successfully")
             store_items_dict = json.loads(store_items)
             for store_item in store_items_dict['success']['items']:
                 items.append(store_item)
         else:
-            logging.error(f'get_items for [{flashfood_store_id}] failed to return successfully')
+            logging.error(f"get_items for [{store['name']}] failed to return successfully")
             logging.debug(f'{store_items}')
 
     conn = init_db()
@@ -93,11 +102,11 @@ def main():
         push_string = ''
 
         if len(item_row) == 1:
-            logging.debug(f"[{item['_id']}] seen before...")
+            logging.debug("%[item['_id']] seen before...")
             if item_row[0][1] != item['name_en']:
-                logging.debug(f"DB: [{item_row[0][1]}] != [{item['name_en']}]")
+                logging.debug("DB: [%item_row[0][1]] != [%item['name_en']]")
             elif item_row[0][2] != item['discounted_price']:
-                logging.debug(f"DB: [{item_row[0][2]}] != [{item['discounted_price']}]")
+                logging.debug("DB: [%item_row[0][2]] != [%item['discounted_price']]")
                 logging.debug('... and changed. Updating...')
                 db.update_item(conn, [item['name_en'], item['discounted_price'], item['_id']])
                 push_string = 'updated.\r'
@@ -108,11 +117,11 @@ def main():
             logging.error(f"Primary key constraint violated. Count of rows with {item['_id']} is {len(item_row)}.")
             continue
         else:
-            logging.debug(f"[{item['_id']}] not seen before.")
+            logging.debug("[%item['_id']] not seen before.")
             db.create_item(conn, [item['_id'], item['name_en'], item['discounted_price']])
             push_string = '.\r'
 
-        itemImage = flashFood.get_image(item['image_url'], item['_id'])
+        itemImage = flash_food.get_image(item['image_url'], item['_id'])
 
         if item['original_price'] > 0 or item['original_price'] == item['discounted_price']:
             discount = 1-(item['discounted_price']/item['original_price'])

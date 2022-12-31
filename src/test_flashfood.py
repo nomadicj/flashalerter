@@ -1,11 +1,11 @@
 import unittest
-import flashFood
+import flash_food
 
 
 class TestFlashFood(unittest.TestCase):
 
     def test_get_items(self):
-        dict = flashFood.get_items()
+        dict = flash_food.get_items()
         self.assertDictContainsSubset(dict)
 
 

@@ -1,3 +1,4 @@
+''' FlashFood module '''
 import logging
 import requests
 import json
@@ -27,12 +28,12 @@ def get_flash_auth_token(username, password):
         access_token = response_json['access_token']
         logging.debug(f'FlashFood api auth access code; [{access_token}]')
         return access_token
-    else:
-        logging.error(f'FlashFood api auth failed. Response code; [{response.status_code}]')
-        return False
+        
+    logging.error(f'FlashFood api auth failed. Response code; [{response.status_code}]')
+    return False
 
 
-def get_nearestStore(lat, long, access_token):
+def get_nearest_store(lat, long, access_token):
     ''' get store nearest to location '''
     headers = {
         'accept': '*/*',
@@ -55,7 +56,7 @@ def get_nearestStore(lat, long, access_token):
     return nearest_store
 
 
-def get_items(storeId, access_token):
+def get_items(store_id: str, access_token: str):
     ''' get store items '''
     headers = {
         'accept': '*/*',
@@ -63,7 +64,7 @@ def get_items(storeId, access_token):
     }
 
     params = {
-        'store_id': storeId,
+        'store_id': store_id,
     }
 
     available_items = requests.get(
@@ -75,7 +76,35 @@ def get_items(storeId, access_token):
     return available_items.text
 
 
-def get_store
+def get_nearest_stores(lat, long, distance, access_token):
+    ''' get store nearest to location '''
+    headers = {
+        'accept': '*/*',
+        'Authorization': f'Bearer {access_token}'
+    }
+
+    params = {
+        'food_images': '1',
+        'latitude': lat,
+        'longitude': long,
+        'distance': distance,
+        'show_all': '1'
+    }
+
+    response = requests.get(
+        'https://api.flashfood.com/api/v1/store/list',
+        params=params,
+        headers=headers,
+    )
+
+    nearest_stores = json.loads(response.text)
+    stores = []
+
+    for store in nearest_stores['success']:
+        logging.debug(f'Store data: {store}')
+        stores.append({'id': store['_id'], 'name': store['name']})
+
+    return stores
 
 
 def get_image(itemImageURL, itemId):
