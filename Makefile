@@ -3,7 +3,7 @@ SHELL := /bin/bash
 $(VERBOSE).SILENT:
 
 # DOCKER_LOGIN := docker login -u $DOCKER_USER -p $DOCKER_PASS
-DOCKER_LOGIN := cat /etc/buildkite/docker-config.txt | docker login --username j@armstro.ca --password-stdin
+DOCKER_LOGIN := cat /etc/buildkite/docker-config.txt | docker login --username j@armstro.co --password-stdin
 
 .PHONY: init
 init:
