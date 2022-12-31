@@ -88,7 +88,7 @@ def main():
             logging.debug(f"get_items for [{store['name']}] returned successfully")
             store_items_dict = json.loads(store_items)
             for store_item in store_items_dict['success']['items']:
-                store_item.update(store['name'])
+                store_item.update({'store': store['name']})
                 items.append(store_item)
         else:
             logging.error(f"get_items for [{store['name']}] failed to return successfully")
