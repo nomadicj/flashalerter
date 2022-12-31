@@ -3,15 +3,16 @@ import requests
 import shutil
 
 
-def notify(pushover_apikey, pushover_userkeys, message, itemImageFileName):
+def notify(pushover_apikey, pushover_userkeys, title, message, itemImageFileName):
     ''' notify user '''
     for pushover_userkey in pushover_userkeys:
-        push_notification(pushover_apikey, pushover_userkey, message, itemImageFileName)
+        push_notification(pushover_apikey, pushover_userkey, title, message, itemImageFileName)
 
 
 def push_notifications(
         pushover_apikey,
         pushover_userkeys,
+        title,
         message,
         itemImageURL,
         itemId
@@ -36,7 +37,7 @@ def push_notifications(
             data={
                 "token": pushover_apikey,
                 "user": pushover_userkey,
-                "title": 'FlashFood v0.1',
+                "title": title,
                 "message": message
             },
             files={

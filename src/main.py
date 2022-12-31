@@ -88,6 +88,7 @@ def main():
             logging.debug(f"get_items for [{store['name']}] returned successfully")
             store_items_dict = json.loads(store_items)
             for store_item in store_items_dict['success']['items']:
+                store_item.extend(store['name'])
                 items.append(store_item)
         else:
             logging.error(f"get_items for [{store['name']}] failed to return successfully")
@@ -130,6 +131,7 @@ def main():
             pushover.notify(
                 pushover_apikey,
                 pushover_userkeys,
+                f'FlashAlert - {item['name']}',
                 f"{item['name_en']} {push_string}${item['discounted_price']:.2f} - {discountPercent:.0f}% discount",
                 itemImage)
         else:
@@ -137,6 +139,7 @@ def main():
             pushover.notify(
                 pushover_apikey,
                 pushover_userkeys,
+                f'FlashAlert - {item['name']}',
                 f"{item['name_en']} {push_string}${item['discounted_price']:.2f}",
                 itemImage)
 
