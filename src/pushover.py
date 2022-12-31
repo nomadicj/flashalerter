@@ -61,6 +61,7 @@ def push_notifications(
 def push_notification(
         pushover_apikey,
         pushover_userkey,
+        title,
         message,
         itemImageFileName
         ):
@@ -72,6 +73,7 @@ def push_notification(
         data={
             "token": pushover_apikey,
             "user": pushover_userkey,
+            "title": title,
             "message": message
         },
         files={
