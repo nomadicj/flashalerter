@@ -131,7 +131,7 @@ def main():
             pushover.notify(
                 pushover_apikey,
                 pushover_userkeys,
-                f'FlashAlert - {item['name']}',
+                f"FlashAlert - {item['name']}",
                 f"{item['name_en']} {push_string}${item['discounted_price']:.2f} - {discountPercent:.0f}% discount",
                 itemImage)
         else:
@@ -139,7 +139,7 @@ def main():
             pushover.notify(
                 pushover_apikey,
                 pushover_userkeys,
-                f'FlashAlert - {item['name']}',
+                f"FlashAlert - {item['name']}",
                 f"{item['name_en']} {push_string}${item['discounted_price']:.2f}",
                 itemImage)
 
