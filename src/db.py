@@ -26,7 +26,7 @@ def create_table(conn):
     sql_create_items_table = """ CREATE TABLE IF NOT EXISTS items (
                                         id text PRIMARY KEY,
                                         name text NOT NULL,
-                                        discounted_price text NOT NULL
+                                        discounted_price real NOT NULL
                                     ); """
 
     try:
