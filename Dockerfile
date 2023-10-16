@@ -1,9 +1,11 @@
-FROM python:alpine
+FROM python:latest
 
 ADD ./requirements.txt .
 
+RUN pip install --upgrade pip
+
 RUN pip install -r requirements.txt
 
-ADD ./src/ .
+ADD ./src .
 
-CMD ["python3", "main.py"] 
+CMD ["python3", "src/main.py"] 
