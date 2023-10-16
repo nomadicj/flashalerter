@@ -1,13 +1,17 @@
 import os
 import logging
-import json
-from datetime import datetime
+from logging.handlers import TimedRotatingFileHandler
+
 import flash_food
+
 import pushover
 import db
 
+from dotenv import load_dotenv
+
 
 # Set vars
+load_dotenv()
 flashfood_user = os.getenv('FLASHFOOD_USER')
 flashfood_pass = os.getenv('FLASHFOOD_PASS')
 flashfood_store_ids = os.getenv('FLASHFOOD_STORE_IDS').split(',')
@@ -16,13 +20,16 @@ pushover_userkey = os.getenv('PUSHOVER_USERKEY')
 pushover_userkeys = os.getenv('PUSHOVER_USERKEYS').split(',')
 db_file = os.getenv('DB_FILE')
 log_level = os.getenv('LOG_LEVEL', default='info').upper()
-logging_filename = f'{datetime.now().replace(microsecond=0).isoformat()}.log'
 
 # Setup logging
+log_dir = 'log'
+log_file = 'flashalerter.log'
+if not os.path.exists(log_dir):
+    os.makedirs(log_dir)
+  
 logging.basicConfig(
-    filename='log/'+logging_filename,
-    filemode='a',
-    format='%(asctime)s - %(levelname)s - %(message)s',
+    handlers=[TimedRotatingFileHandler(f'{log_dir}/{log_file}', backupCount=10, when='midnight')],
+    format='%(asctime)s — %(name)s — %(levelname)s — %(funcName)s:%(lineno)d — %(message)s',
     datefmt='%d-%b-%y %H:%M:%S',
     level=log_level
     )
@@ -54,94 +61,65 @@ def init_db():
 
     return conn
 
-
-def init_flashfood_api(flashfood_user, flashfood_pass):
-    ''' initialise flashfood api token '''
-    logging.info('Initialising FlashFood api')
-    access_token = flash_food.get_flash_auth_token(flashfood_user, flashfood_pass)
-
-    return access_token
-
-
 def main():
+    """
+    """
 
-    access_token = init_flashfood_api(flashfood_user, flashfood_pass)
-
-    if access_token is False:
-        logging.critical('No access token returned. Exiting.')
-        print('Critical error getting access token. Exiting.')
-        exit(-1)
+    flashfood = flash_food.Api(flashfood_user, flashfood_pass)
 
     lat: float = 49.2568
     long: float = -122.8255
     distance: int = 5
 
-    nearest_stores = flash_food.get_nearest_stores(lat, long, distance, access_token)
+    stores = flashfood.get_nearest_stores(lat, long, distance)
 
-    logging.debug(f'Nearest stores: {nearest_stores}')
-
-    items = []
-
-    for store in nearest_stores:
-        store_items = flash_food.get_items(store['id'], access_token)
-        if 'success' in store_items:
-            logging.debug(f"get_items for [{store['name']}] returned successfully")
-            store_items_dict = json.loads(store_items)
-            for store_item in store_items_dict['success']['items']:
-                store_item.update({'store': store['name']})
-                items.append(store_item)
-        else:
-            logging.error(f"get_items for [{store['name']}] failed to return successfully")
-            logging.debug(f'{store_items}')
+    logging.debug('Nearest stores: %s', stores)
 
     conn = init_db()
 
-    for item in items:
-        logging.debug(f'Item [{item}]')
-        item_row = db.select_item(conn, item['_id'])
-        logging.debug(f'Select returned [{item_row}]')
-        push_string = ''
+    for store in stores:
+        for item in store.get_items():
+            logging.debug('Item [%s]', item._id)
+            item_row = db.select_item(conn, item._id)
+            logging.debug('Select returned [%s]', item_row)
+            push_string = ''
 
-        if len(item_row) == 1:
-            logging.debug("%[item['_id']] seen before...")
-            if item_row[0][1] != item['name_en']:
-                logging.debug("DB: [%item_row[0][1]] != [%item['name_en']]")
-            elif item_row[0][2] != item['discounted_price']:
-                logging.debug("DB: [%item_row[0][2]] != [%item['discounted_price']]")
-                logging.debug('... and changed. Updating...')
-                db.update_item(conn, [item['name_en'], item['discounted_price'], item['_id']])
-                push_string = 'updated.\r'
-            else:
-                logging.debug('... and unchanged. Skipping on...')
+            if len(item_row) == 1:
+                logging.debug(f'{item._id} seen before...')
+                if item_row[0][1] != item.name_en:
+                    logging.debug(f'DB: {item_row[0][1]} != {item.name_en}')
+                elif item_row[0][2] != item.discounted_price:
+                    logging.debug(f'DB: {item_row[0][2]} != {item.discounted_price}')
+                    logging.debug('... and changed. Updating...')
+                    db.update_item(conn, [item.name_en, item.discounted_price, item._id])
+                    push_string = 'updated.\r'
+                else:
+                    logging.debug('... and unchanged. Skipping on...')
+                    continue
+            elif len(item_row) > 1:
+                logging.error(f'Primary key constraint violated. Count of rows with {item._id} is {len(item_row)}.')
                 continue
-        elif len(item_row) > 1:
-            logging.error(f"Primary key constraint violated. Count of rows with {item['_id']} is {len(item_row)}.")
-            continue
-        else:
-            logging.debug("[%item['_id']] not seen before.")
-            db.create_item(conn, [item['_id'], item['name_en'], item['discounted_price']])
-            push_string = '.\r'
+            else:
+                logging.debug(f'{item._id} not seen before.')
+                db.create_item(conn, [item._id, item.name_en, item.discounted_price])
+                push_string = '.\r'
 
-        itemImage = flash_food.get_image(item['image_url'], item['_id'])
-
-        if item['original_price'] > 0 or item['original_price'] == item['discounted_price']:
-            discount = 1-(item['discounted_price']/item['original_price'])
-            discountPercent = discount*100
-            print(f"{item['name_en']} ${item['discounted_price']:.2f} - {discountPercent:.0f}% discount")
-            pushover.notify(
-                pushover_apikey,
-                pushover_userkeys,
-                f"{item['store']}",
-                f"{item['name_en']} {push_string}${item['discounted_price']:.2f} - {discountPercent:.0f}% discount",
-                itemImage)
-        else:
-            print(f"{item['name_en']} ${item['discounted_price']:.2f}")
-            pushover.notify(
-                pushover_apikey,
-                pushover_userkeys,
-                f"{item['store']}",
-                f"{item['name_en']} {push_string}${item['discounted_price']:.2f}",
-                itemImage)
+            if item.original_price > 0 or item.original_price == item.discounted_price:
+                print(f'{item.name_en} ${item.discounted_price:.2f} - {item.discounted_percentage}% discount')
+                pushover.notify(
+                    pushover_apikey,
+                    pushover_userkeys,
+                    f"{item.store_id}",
+                    f"{item.name_en} {push_string}${item.discounted_price:.2f} - {item.discounted_percentage:.0f}% discount",
+                    item.image)
+            else:
+                print(f"{item.name_en} ${item.discounted_price:.2f}")
+                pushover.notify(
+                    pushover_apikey,
+                    pushover_userkeys,
+                    f"{item.store_id}",
+                    f"{item.name_en} {push_string}${item.discounted_price:.2f}",
+                    item.image)
 
 
 if __name__ == '__main__':
