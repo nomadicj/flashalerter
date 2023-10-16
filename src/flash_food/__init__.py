@@ -1,23 +1,28 @@
+"""
+FlashFood module
+
+Provides session, store and item objects
+"""
 import logging
-import requests
 import json
+
+import requests
 
 from flash_food.store import Store
 from flash_food.session import Session
 
-from icecream import ic
-
-assess_token = None
-
 
 class Api:
     """
+    FlashFood API Object
+
+    Provides initialization for API access and get_nearest_stores
     """
 
     def __init__(self, username, password):
         self.username = username
         self.password = password
-        logging.info('Initialising FlashFood api')
+        logging.info('Initializing FlashFood api')
 
         self.session = Session()
         self.session.authenticate(username=username, password=password)

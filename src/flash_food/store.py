@@ -1,3 +1,6 @@
+"""
+FlashFood Store
+"""
 import requests
 
 from flash_food.item import Item
@@ -9,6 +12,9 @@ from dataclasses import dataclass
 @dataclass
 class Store:
     """
+    FlashFood Store Object
+
+    Provides 'get_items' method in addition to standard properties created at initialization
     """
     id: str
     name: str
@@ -36,22 +42,22 @@ class Store:
         for item in available_items.json()['success']['items']:
             items.append(
                 Item(
-                    item['_id'],
-                    item['available_qty'],
-                    item['original_price'],
-                    item['discounted_price'],
-                    item['image_gallery'],
-                    item['image_url'],
-                    item['is_snap_eligible'],
-                    item['name_en'],
-                    item['name_fr'],
-                    item['sale_over_datetime'],
-                    item['same_day_sale'],
-                    item['upc'],
-                    item['store_id'],
-                    item['best_before_date'],
-                    item['intime']
+                    id=item['_id'],
+                    available_qty=item['available_qty'],
+                    original_price=item['original_price'],
+                    discounted_price=item['discounted_price'],
+                    image_gallery=item['image_gallery'],
+                    image_url=item['image_url'],
+                    is_snap_eligible=item['is_snap_eligible'],
+                    name_en=item['name_en'],
+                    name_fr=item['name_fr'],
+                    sale_over_datetime=item['sale_over_datetime'],
+                    same_day_sale=item['same_day_sale'],
+                    upc=item['upc'],
+                    store_id=item['store_id'],
+                    best_before_date=item['best_before_date'],
+                    intime=item['intime']
                     )
-                )     
+                )
 
         return items

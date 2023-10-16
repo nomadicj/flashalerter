@@ -1,15 +1,22 @@
+"""
+FlashFood Item
+"""
 import logging
-import requests
 import shutil
-
+import os
 from dataclasses import dataclass
+import requests
 
 
 @dataclass
 class Item:
     """
+    FlashFood Item Object
+
+    Provides 'image' and 'discounted_percentage' properties
+    in addition to standard properties created at initialization
     """
-    _id: str
+    id: str
     available_qty: int
     original_price: float
     discounted_price: float
@@ -26,24 +33,28 @@ class Item:
     intime: str
 
     @property
-    def image(self):
-        ''' get image for notification '''
-        itemImage = f'{self._id}.jpg'
-        itemImageRequestResponse = requests.get(
-                                            self.image_url,
-                                            stream=True,
-                                            timeout=(5, None)
-                                            )
+    def image(self) -> str:
+        ''' Returns path to image for item '''
+        item_image = f'images/{self.id}.jpg'
+        response = requests.get(
+            self.image_url,
+            stream=True,
+            timeout=(5, None)
+            )
 
-        if itemImageRequestResponse.status_code == 200:
-            with open(itemImage, 'wb') as imageFile:
-                shutil.copyfileobj(itemImageRequestResponse.raw, imageFile)
-            logging.info('Image successfully Downloaded: %s', {itemImage})
-            return itemImage
+        if response.status_code == 200:
+            if not os.path.exists('images'):
+                os.makedirs('images')
+            with open(item_image, 'wb') as image_file:
+                shutil.copyfileobj(response.raw, image_file)
+            logging.info('Image successfully Downloaded: %s', {item_image})
         else:
             logging.error('Image Couldn\'t be retrieved')
-            return 'no-image-available.png'
+            item_image = 'images/no-image-available.png'
+
+        return item_image
 
     @property
-    def discounted_percentage(self):
+    def discounted_percentage(self) -> int:
+        """ Returns discounted price / original price """
         return self.discounted_price // self.original_price
