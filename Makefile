@@ -16,7 +16,7 @@ lint:
 
 .PHONY: test
 test:
-	py.test tests
+	src/py.test tests
 
 .PHONY: build
 build:
@@ -41,4 +41,4 @@ local:
 
 .PHONY: dockerised
 dockerised:
-	docker-compose up --build
+	docker-compose up --force-recreate
